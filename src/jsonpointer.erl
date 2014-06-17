@@ -35,10 +35,10 @@ encode([Ref|Rest], Bin) when is_binary(Bin), is_binary(Ref) ->
 decode(Bin) -> decode(Bin, []).
 
 decode(<<>>, Acc) -> lists:reverse(Acc);
-decode(<<$^, $/, Rest/binary>>, [Current|Done]) ->
+decode(<<$~, $0, Rest/binary>>, [Current|Done]) ->
+    decode(Rest, [<<Current/binary, $~>>] ++ Done);
+decode(<<$~, $1, Rest/binary>>, [Current|Done]) ->
     decode(Rest, [<<Current/binary, $/>>] ++ Done);
-decode(<<$^, $^, Rest/binary>>, [Current|Done]) ->
-    decode(Rest, [<<Current/binary, $^>>] ++ Done);
 decode(<<$/, Rest/binary>>, []) ->
     decode(Rest, [<<>>]);
 decode(<<$/, Rest/binary>>, [Current|Done]) ->
@@ -50,8 +50,8 @@ decode(<<Codepoint/utf8, Rest/binary>>, [Current|Done]) ->
 escape(Ref) -> escape(Ref, <<>>).
 
 escape(<<>>, Acc) -> Acc;
-escape(<<$^, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $^, $^>>);
-escape(<<$/, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $^, $/>>);
+escape(<<$~, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $~, $0>>);
+escape(<<$/, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $~, $1>>);
 escape(<<Codepoint/utf8, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, Codepoint>>).
 
 
@@ -69,12 +69,12 @@ encode_test_() ->
             <<"/foo/bar/baz">>,
             encode([<<"foo">>, <<"bar">>, <<"baz">>])
         )},
-        {"escaped ^ in reference", ?_assertEqual(
-            <<"/^^/a^^a/^^foo/foo^^">>,
-            encode([<<"^">>, <<"a^a">>, <<"^foo">>, <<"foo^">>])
+        {"~ in reference", ?_assertEqual(
+            <<"/~0/a~0a/~0foo/foo~0">>,
+            encode([<<"~">>, <<"a~a">>, <<"~foo">>, <<"foo~">>])
         )},
-        {"escaped / in reference", ?_assertEqual(
-            <<"/^//a^/a/^/foo/foo^/">>,
+        {"/ in reference", ?_assertEqual(
+            <<"/~1/a~1a/~1foo/foo~1">>,
             encode([<<"/">>, <<"a/a">>, <<"/foo">>, <<"foo/">>])
         )}
     ].
@@ -90,13 +90,13 @@ decode_test_() ->
             [<<"foo">>, <<"bar">>, <<"baz">>],
             decode(<<"/foo/bar/baz">>)
         )},
-        {"escaped ^ in reference", ?_assertEqual(
-            [<<"^">>, <<"a^a">>, <<"^foo">>, <<"foo^">>],
-            decode(<<"/^^/a^^a/^^foo/foo^^">>)
+        {"~ in reference", ?_assertEqual(
+            [<<"~">>, <<"a~a">>, <<"~foo">>, <<"foo~">>],
+            decode(<<"/~0/a~0a/~0foo/foo~0">>)
         )},
-        {"escaped / in reference", ?_assertEqual(
+        {"/ in reference", ?_assertEqual(
             [<<"/">>, <<"a/a">>, <<"/foo">>, <<"foo/">>],
-            decode(<<"/^//a^/a/^/foo/foo^/">>)
+            decode(<<"/~1/a~1a/~1foo/foo~1">>)
         )}
     ].
 

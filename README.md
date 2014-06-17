@@ -3,7 +3,7 @@ jsonpointer
 
 a tiny library to convert from json pointer syntax to lists of erlang terms and vice versa
 
-see the [draft proposal](http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-01) for
+see [rfc6901](http://tools.ietf.org/html/rfc6901) for
 details of the specification
 
 ```erlang
