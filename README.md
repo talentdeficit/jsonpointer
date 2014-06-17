@@ -15,6 +15,8 @@ details of the specification
 <<"/foo/bar/baz">>
 4> jsonpointer:encode([<<"foo">>,<<"1">>,<<"bar">>]).
 <<"foo/1/baz">>
+5> jsonpointer:encode([<<"foo">>, 0, 1, 2]).
+<<"foo/0/1/2">>
 ```
 
 

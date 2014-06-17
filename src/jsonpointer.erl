@@ -28,8 +28,11 @@
 encode(Refs) when is_list(Refs) -> encode(Refs, <<>>).
 
 encode([], Bin) -> Bin;
-encode([Ref|Rest], Bin) when is_binary(Bin), is_binary(Ref) ->
-    encode(Rest, <<Bin/binary, $/, (escape(Ref))/binary>>).
+encode([Ref|Rest], Bin) when is_binary(Ref) ->
+    encode(Rest, <<Bin/binary, $/, (escape(Ref))/binary>>);
+encode([Ref|Rest], Bin) when is_integer(Ref) ->
+    IntBin = unicode:characters_to_binary(integer_to_list(Ref)),
+    encode(Rest, <<Bin/binary, $/, IntBin/binary>>).
 
 
 decode(Bin) -> decode(Bin, []).
@@ -68,6 +71,10 @@ encode_test_() ->
         {"multiple references", ?_assertEqual(
             <<"/foo/bar/baz">>,
             encode([<<"foo">>, <<"bar">>, <<"baz">>])
+        )},
+        {"integer reference", ?_assertEqual(
+            <<"/foo/0/1/2">>,
+            encode([<<"foo">>, 0, 1, 2])
         )},
         {"~ in reference", ?_assertEqual(
             <<"/~0/a~0a/~0foo/foo~0">>,
