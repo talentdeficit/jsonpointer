@@ -97,6 +97,10 @@ decode_test_() ->
         {"/ in reference", ?_assertEqual(
             [<<"/">>, <<"a/a">>, <<"/foo">>, <<"foo/">>],
             decode(<<"/~1/a~1a/~1foo/foo~1">>)
+        )},
+        {"~01 in reference", ?_assertEqual(
+            [<<"~1">>],
+            decode(<<"/~01">>)
         )}
     ].
 
