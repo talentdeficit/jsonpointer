@@ -23,6 +23,36 @@
 -module(jsonpointer).
 
 -export([encode/1, decode/1]).
+-export([get/2]).
+
+
+get(Value, Pointer) when is_list(Pointer); is_binary(Pointer) ->
+    try Value of
+        V when is_list(V) -> get_from_list(maybe_compile(Pointer), Value);
+%        V when is_binary(V) -> get_from_json(maybe_compile(Pointer), Value);
+        _ -> erlang:error(function_clause)
+    catch error:_ -> erlang:error(badarg)
+    end.
+
+
+get_from_list([], Value) -> Value;
+get_from_list([Ref|Rest], [{_,_}|_] = Value) when is_binary(Ref) ->
+    case proplists:get_value(Ref, Value) of
+        undefined -> erlang:error(badarg);
+        V -> get_from_list(Rest, V)
+    end;
+get_from_list([Ref|Rest], Value) when is_integer(Ref) ->
+    % jsonpointer arrays are zero indexed, erlang lists are indexed from 1
+    try lists:nth(Ref + 1, Value) of
+        V -> get_from_list(Rest, V)
+    catch error:function_clause -> erlang:error(badarg)
+    end;
+get_from_list([Ref|Rest], Value) ->
+    get_from_list([binary_to_integer(Ref)] ++ Rest, Value).
+
+
+maybe_compile(Pointer) when is_binary(Pointer) -> decode(Pointer);
+maybe_compile(Pointer) -> Pointer.
 
 
 encode(Refs) when is_list(Refs) -> encode(Refs, <<>>).
@@ -32,7 +62,8 @@ encode([Ref|Rest], Bin) when is_binary(Ref) ->
     encode(Rest, <<Bin/binary, $/, (escape(Ref))/binary>>);
 encode([Ref|Rest], Bin) when is_integer(Ref) ->
     IntBin = unicode:characters_to_binary(integer_to_list(Ref)),
-    encode(Rest, <<Bin/binary, $/, IntBin/binary>>).
+    encode(Rest, <<Bin/binary, $/, IntBin/binary>>);
+encode(_, _) -> erlang:error(badarg).
 
 
 decode(Bin) -> decode(Bin, []).
@@ -47,7 +78,8 @@ decode(<<$/, Rest/binary>>, []) ->
 decode(<<$/, Rest/binary>>, [Current|Done]) ->
     decode(Rest, [<<>>, Current] ++ Done);
 decode(<<Codepoint/utf8, Rest/binary>>, [Current|Done]) ->
-    decode(Rest, [<<Current/binary, Codepoint/utf8>>] ++ Done).
+    decode(Rest, [<<Current/binary, Codepoint/utf8>>] ++ Done);
+decode(_, _) -> erlang:error(badarg).
 
 
 escape(Ref) -> escape(Ref, <<>>).
@@ -60,6 +92,40 @@ escape(<<Codepoint/utf8, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, Codep
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+
+get_from_list_test_() ->
+    List = [
+        {<<"a">>, 1},
+        {<<"b">>, [{<<"c">>, 2}]},
+        {<<"d">>, [
+            {<<"e">>, [
+                [{<<"a">>, 3}], [{<<"b">>, 4}], [{<<"c">>, 5}]
+            ]},
+            {<<"e/f">>, 2}
+        ]},
+        {<<"a/b">>, [{<<"c">>, 1}]},
+        {<<"~1">>, 3},
+        {<<"01">>, 4}
+    ],
+    [
+        ?_assertEqual(List, get(List, <<>>)),
+        ?_assertEqual(List, get(List, [])),
+        ?_assertEqual(1, get(List, <<"/a">>)),
+        ?_assertEqual(1, get(List, [<<"a">>])),
+        ?_assertEqual(2, get(List, <<"/b/c">>)),
+        ?_assertEqual(2, get(List, [<<"b">>,<<"c">>])),
+        ?_assertEqual(3, get(List, <<"/d/e/0/a">>)),
+        ?_assertEqual(3, get(List, [<<"d">>,<<"e">>,<<"0">>,<<"a">>])),
+        ?_assertEqual(3, get(List, [<<"d">>,<<"e">>,0,<<"a">>])),
+        ?_assertEqual(4, get(List, <<"/d/e/1/b">>)),
+        ?_assertEqual(4, get(List, [<<"d">>,<<"e">>,<<"1">>,<<"b">>])),
+        ?_assertEqual(4, get(List, [<<"d">>,<<"e">>,1,<<"b">>])),
+        ?_assertEqual(5, get(List, <<"/d/e/2/c">>)),
+        ?_assertEqual(5, get(List, [<<"d">>,<<"e">>,<<"2">>,<<"c">>])),
+        ?_assertEqual(5, get(List, [<<"d">>,<<"e">>,2,<<"c">>])),
+        ?_assertError(badarg, get(List, <<"a">>)),
+        ?_assertError(badarg, get(List, <<"a/">>))
+    ].
 
 encode_test_() ->
     [
