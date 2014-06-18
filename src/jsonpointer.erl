@@ -26,7 +26,8 @@
 -export([get/2]).
 
 
-get(Value, Pointer) when is_list(Pointer); is_binary(Pointer) ->
+get(Value, Pointer)
+when is_list(Pointer); is_binary(Pointer) ->
     try Value of
         V when is_list(V) -> get_from_list(maybe_compile(Pointer), Value);
 %        V when is_binary(V) -> get_from_json(maybe_compile(Pointer), Value);
@@ -36,19 +37,21 @@ get(Value, Pointer) when is_list(Pointer); is_binary(Pointer) ->
 
 
 get_from_list([], Value) -> Value;
-get_from_list([Ref|Rest], [{_,_}|_] = Value) when is_binary(Ref) ->
+get_from_list([Ref|Rest], [{_,_}|_] = Value)
+when is_binary(Ref) ->
     case proplists:get_value(Ref, Value) of
         undefined -> erlang:error(badarg);
         V -> get_from_list(Rest, V)
     end;
-get_from_list([Ref|Rest], Value) when is_integer(Ref) ->
+get_from_list([Ref|Rest], Value)
+when is_integer(Ref) ->
     % jsonpointer arrays are zero indexed, erlang lists are indexed from 1
     try lists:nth(Ref + 1, Value) of
         V -> get_from_list(Rest, V)
     catch error:function_clause -> erlang:error(badarg)
     end;
 get_from_list([Ref|Rest], Value) ->
-    get_from_list([binary_to_integer(Ref)] ++ Rest, Value).
+    get_from_list([ref_to_int(Ref)] ++ Rest, Value).
 
 
 maybe_compile(Pointer) when is_binary(Pointer) -> decode(Pointer);
@@ -58,9 +61,11 @@ maybe_compile(Pointer) -> Pointer.
 encode(Refs) when is_list(Refs) -> encode(Refs, <<>>).
 
 encode([], Bin) -> Bin;
-encode([Ref|Rest], Bin) when is_binary(Ref) ->
+encode([Ref|Rest], Bin)
+when is_binary(Ref) ->
     encode(Rest, <<Bin/binary, $/, (escape(Ref))/binary>>);
-encode([Ref|Rest], Bin) when is_integer(Ref) ->
+encode([Ref|Rest], Bin)
+when is_integer(Ref) ->
     IntBin = unicode:characters_to_binary(integer_to_list(Ref)),
     encode(Rest, <<Bin/binary, $/, IntBin/binary>>);
 encode(_, _) -> erlang:error(badarg).
@@ -89,6 +94,11 @@ escape(<<$~, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $~, $0>>);
 escape(<<$/, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $~, $1>>);
 escape(<<Codepoint/utf8, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, Codepoint>>).
 
+
+ref_to_int(<<"0">>) -> 0;
+ref_to_int(<<Digit/utf8, _/binary>> = Ref)
+when Digit >= 49, Digit =< 57 ->
+    binary_to_integer(Ref).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
