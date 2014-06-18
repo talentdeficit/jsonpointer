@@ -137,6 +137,34 @@ get_from_list_test_() ->
         ?_assertError(badarg, get(List, <<"a/">>))
     ].
 
+rfc6901_examples_test_() ->
+    Obj = [
+        {<<"foo">>, [<<"bar">>, <<"baz">>]},
+        {<<"">>, 0},
+        {<<"a/b">>, 1},
+        {<<"c%d">>, 2},
+        {<<"e^f">>, 3},
+        {<<"g|h">>, 4},
+        {<<"i\\\\j">>, 5},
+        {<<"k\\\"l">>, 6},
+        {<<" ">>, 7},
+        {<<"m~n">>, 8}
+    ],
+    [
+        ?_assertEqual(Obj, get(Obj, <<"">>)),
+        ?_assertEqual([<<"bar">>, <<"baz">>], get(Obj, <<"/foo">>)),
+        ?_assertEqual(<<"bar">>, get(Obj, <<"/foo/0">>)),
+        ?_assertEqual(0, get(Obj, <<"/">>)),
+        ?_assertEqual(1, get(Obj, <<"/a~1b">>)),
+        ?_assertEqual(2, get(Obj, <<"/c%d">>)),
+        ?_assertEqual(3, get(Obj, <<"/e^f">>)),
+        ?_assertEqual(4, get(Obj, <<"/g|h">>)),
+        ?_assertEqual(5, get(Obj, <<"/i\\\\j">>)),
+        ?_assertEqual(6, get(Obj, <<"/k\\\"l">>)),
+        ?_assertEqual(7, get(Obj, <<"/ ">>)),
+        ?_assertEqual(8, get(Obj, <<"/m~0n">>))
+    ].
+
 encode_test_() ->
     [
         {"root path", ?_assertEqual(<<>>, encode([]))},
