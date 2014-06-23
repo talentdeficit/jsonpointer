@@ -34,7 +34,10 @@ when is_binary(Ref) ->
 encode([Ref|Rest], Bin)
 when is_integer(Ref) ->
     IntBin = unicode:characters_to_binary(integer_to_list(Ref)),
-    encode(Rest, <<Bin/binary, $/, IntBin/binary>>).
+    encode(Rest, <<Bin/binary, $/, IntBin/binary>>);
+encode([Ref|Rest], Bin)
+when is_atom(Ref) ->
+    encode(Rest, <<Bin/binary, $/, (unicode:characters_to_binary(atom_to_list(Ref)))/binary>>).
 
 
 decode(Bin) -> decode(Bin, []).
@@ -93,6 +96,14 @@ encode_test_() ->
         {"/ in reference", ?_assertEqual(
             <<"/~1/a~1a/~1foo/foo~1">>,
             encode([<<"/">>, <<"a/a">>, <<"/foo">>, <<"foo/">>])
+        )},
+        {"integer in reference", ?_assertEqual(
+            <<"/foo/1">>,
+            encode([<<"foo">>, 1])
+        )},
+        {"atom in reference", ?_assertEqual(
+            <<"/foo/bar">>,
+            encode([foo, bar])
         )}
     ].
 
