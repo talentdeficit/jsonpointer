@@ -63,7 +63,8 @@ escape(<<Codepoint/utf8, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, Codep
 ref_to_int(<<"0">>) -> 0;
 ref_to_int(<<Digit/utf8, _/binary>> = Ref)
 when Digit >= $1, Digit =< $9 ->
-    binary_to_integer(Ref).
+    binary_to_integer(Ref);
+ref_to_int(_) -> erlang:error(badarg).
 
 
 -ifdef(TEST).
@@ -118,6 +119,13 @@ decode_test_() ->
             [<<"~1">>],
             decode(<<"/~01">>)
         )}
+    ].
+
+ref_to_int_test_() ->
+    [
+        {"0", ?_assertEqual(0, ref_to_int(<<"0">>))},
+        {"123456789", ?_assertEqual(123456789, ref_to_int(<<"123456789">>))},
+        {"01", ?_assertError(badarg, ref_to_int(<<"01">>))}
     ].
 
 -endif.
