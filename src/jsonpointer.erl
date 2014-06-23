@@ -23,6 +23,7 @@
 -module(jsonpointer).
 
 -export([encode/1, decode/1]).
+<<<<<<< HEAD
 -export([get/2]).
 
 
@@ -56,6 +57,8 @@ get_from_list([Ref|Rest], Value) ->
 
 maybe_compile(Pointer) when is_binary(Pointer) -> decode(Pointer);
 maybe_compile(Pointer) -> Pointer.
+=======
+>>>>>>> parent of d1990b3... get/2 implementation and initial tests
 
 
 encode(Refs) when is_list(Refs) -> encode(Refs, <<>>).
@@ -67,8 +70,7 @@ when is_binary(Ref) ->
 encode([Ref|Rest], Bin)
 when is_integer(Ref) ->
     IntBin = unicode:characters_to_binary(integer_to_list(Ref)),
-    encode(Rest, <<Bin/binary, $/, IntBin/binary>>);
-encode(_, _) -> erlang:error(badarg).
+    encode(Rest, <<Bin/binary, $/, IntBin/binary>>).
 
 
 decode(Bin) -> decode(Bin, []).
@@ -83,8 +85,7 @@ decode(<<$/, Rest/binary>>, []) ->
 decode(<<$/, Rest/binary>>, [Current|Done]) ->
     decode(Rest, [<<>>, Current] ++ Done);
 decode(<<Codepoint/utf8, Rest/binary>>, [Current|Done]) ->
-    decode(Rest, [<<Current/binary, Codepoint/utf8>>] ++ Done);
-decode(_, _) -> erlang:error(badarg).
+    decode(Rest, [<<Current/binary, Codepoint/utf8>>] ++ Done).
 
 
 escape(Ref) -> escape(Ref, <<>>).
@@ -103,6 +104,7 @@ when Digit >= 49, Digit =< 57 ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+<<<<<<< HEAD
 get_from_list_test_() ->
     List = [
         {<<"a">>, 1},
@@ -165,6 +167,8 @@ rfc6901_examples_test_() ->
         ?_assertEqual(8, get(Obj, <<"/m~0n">>))
     ].
 
+=======
+>>>>>>> parent of d1990b3... get/2 implementation and initial tests
 encode_test_() ->
     [
         {"root path", ?_assertEqual(<<>>, encode([]))},
