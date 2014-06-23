@@ -1,4 +1,4 @@
-jsonpointer (v1.0.0)
+jsonpointer (v1.1.0)
 ====================
 
 a tiny library to convert from json pointer syntax to lists of erlang terms and vice versa
