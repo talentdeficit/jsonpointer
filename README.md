@@ -1,5 +1,5 @@
-jsonpointer
-===========
+jsonpointer (v1.0.0)
+====================
 
 a tiny library to convert from json pointer syntax to lists of erlang terms and vice versa
 
@@ -17,6 +17,10 @@ details of the specification
 <<"foo/1/baz">>
 5> jsonpointer:encode([<<"foo">>, 0, 1, 2]).
 <<"foo/0/1/2">>
+6> jsonpointer:ref_to_int(<<"0">>).
+0
+7> jsonpointer:ref_to_int(<<"123456789">>).
+123456789
 ```
 
 

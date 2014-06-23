@@ -22,7 +22,7 @@
 
 -module(jsonpointer).
 
--export([encode/1, decode/1]).
+-export([encode/1, decode/1, ref_to_int/1]).
 
 
 encode(Refs) when is_list(Refs) -> encode(Refs, <<>>).
@@ -58,6 +58,12 @@ escape(<<>>, Acc) -> Acc;
 escape(<<$~, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $~, $0>>);
 escape(<<$/, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, $~, $1>>);
 escape(<<Codepoint/utf8, Rest/binary>>, Acc) -> escape(Rest, <<Acc/binary, Codepoint>>).
+
+
+ref_to_int(<<"0">>) -> 0;
+ref_to_int(<<Digit/utf8, _/binary>> = Ref)
+when Digit >= $1, Digit =< $9 ->
+    binary_to_integer(Ref).
 
 
 -ifdef(TEST).

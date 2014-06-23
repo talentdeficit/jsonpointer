@@ -1,7 +1,7 @@
 {application, jsonpointer,
 [
     {description, "a tiny library to convert to and from json pointer syntax"},
-    {vsn, "0.1.0"},
+    {vsn, "1.0.0"},
     {modules, [jsonpointer]},
     {registered, []},
     {applications, [
