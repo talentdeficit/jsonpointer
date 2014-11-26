@@ -6,9 +6,9 @@ a tiny library to convert from json pointer syntax to lists of erlang terms and 
 see [rfc6901](http://tools.ietf.org/html/rfc6901) for
 details of the specification
 
-**jsonpointer** is built via [rebar][rebar], and continuous integration testing provided by [travis-ci][travis]
+**jsonpointer** is built via [mix][mix], and continuous integration testing provided by [travis-ci][travis]
 
-current status: [![Build Status](https://travis-ci.org/talentdeficit/jsonpointer.svg?branch=master)](https://travis-ci.org/talentdeficit/jsonpointer)
+current status: [![Build Status](https://travis-ci.org/talentdeficit/jsonpointer.svg?branch=mix)](https://travis-ci.org/talentdeficit/jsonpointer)
 
 **jsonpointer** is released under the terms of the [MIT][MIT] license
 
@@ -33,4 +33,6 @@ copyright 2014 alisdair sullivan
 123456789
 ```
 
-
+[MIT]: http://www.opensource.org/licenses/mit-license.html
+[mix]: https://hex.pm
+[travis]: https://travis-ci.org/
